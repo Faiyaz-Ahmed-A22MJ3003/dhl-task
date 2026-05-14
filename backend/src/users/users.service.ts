@@ -10,6 +10,12 @@ export class UsersService {
     }
 
     create(data: { name: string, email: string }) { 
-        return this.prisma.user.create({ data });
+        return this.prisma.user.create({ 
+            data: {
+                name: data.name,
+                email: data.email,
+                passwordHash: 'temporary-password-hash',
+            },
+         });
     }
 }
