@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ArticleStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateArticleDto } from './dto/create-article.dto';
@@ -7,7 +7,7 @@ import { UpdateArticleStatusDto } from './dto/update-article-status.dto';
 
 @Injectable()
 export class ArticlesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async findAll(query: {
     search?: string;
@@ -23,22 +23,22 @@ export class ArticlesService {
         createdById: creatorId ? Number(creatorId) : undefined,
         OR: search
           ? [
-              { title: { contains: search, mode: 'insensitive' } },
-              { summary: { contains: search, mode: 'insensitive' } },
-              { content: { contains: search, mode: 'insensitive' } },
-            ]
+            { title: { contains: search, mode: 'insensitive' } },
+            { summary: { contains: search, mode: 'insensitive' } },
+            { content: { contains: search, mode: 'insensitive' } },
+          ]
           : undefined,
         articleTags: tag
           ? {
-              some: {
-                tag: {
-                  name: {
-                    equals: tag,
-                    mode: 'insensitive',
-                  },
+            some: {
+              tag: {
+                name: {
+                  equals: tag,
+                  mode: 'insensitive',
                 },
               },
-            }
+            },
+          }
           : undefined,
       },
       include: {
@@ -235,15 +235,15 @@ export class ArticlesService {
         publishedAt: dto.status === 'PUBLISHED' ? new Date() : undefined,
         articleTags: dto.tagNames
           ? {
-              create: dto.tagNames.map((tagName) => ({
-                tag: {
-                  connectOrCreate: {
-                    where: { name: tagName },
-                    create: { name: tagName },
-                  },
+            create: dto.tagNames.map((tagName) => ({
+              tag: {
+                connectOrCreate: {
+                  where: { name: tagName },
+                  create: { name: tagName },
                 },
-              })),
-            }
+              },
+            })),
+          }
           : undefined,
       },
       include: {
@@ -274,6 +274,22 @@ export class ArticlesService {
 
   async updateStatus(id: number, dto: UpdateArticleStatusDto) {
     const article = await this.findOne(id);
+
+    const allowedTransitions: Record<ArticleStatus, ArticleStatus[]> = {
+      DRAFT: ['REVIEWED', 'ARCHIVED'],
+      REVIEWED: ['PUBLISHED', 'DRAFT', 'ARCHIVED'],
+      PUBLISHED: ['ARCHIVED'],
+      ARCHIVED: [],
+    };
+
+    const currentStatus = article.status as ArticleStatus;
+    const nextStatus = dto.status;
+
+    if (!allowedTransitions[currentStatus].includes(nextStatus)) {
+      throw new BadRequestException(
+        `Invalid status transition from ${currentStatus} to ${nextStatus}`,
+      );
+    }
 
     const updatedArticle = await this.prisma.article.update({
       where: { id },
