@@ -279,7 +279,7 @@ export class ArticlesService {
       DRAFT: ['REVIEWED', 'ARCHIVED'],
       REVIEWED: ['PUBLISHED', 'DRAFT', 'ARCHIVED'],
       PUBLISHED: ['ARCHIVED'],
-      ARCHIVED: [],
+      ARCHIVED: ['DRAFT'],
     };
 
     const currentStatus = article.status as ArticleStatus;

@@ -1,0 +1,149 @@
+$header-height: 130px;
+
+:host {
+    display: block;
+    min-height: 100vh;
+}
+
+.app-shell {
+    display: flex;
+    min-height: 100vh;
+    background: #f4f4f4;
+    color: #202020;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.sidebar {
+    width: 290px;
+    background: linear-gradient(180deg, #ffcc00 0%, #f7bd00 100%);
+    border-right: 7px solid #d40511;
+    padding: 24px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    box-shadow: 8px 0 24px rgba(0, 0, 0, 0.08);
+}
+
+.brand-block {
+    height: 105px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 8px;
+    border-bottom: 1px solid rgba(120, 80, 0, 0.25);
+    text-align: center;
+}
+
+.brand-logo {
+    width: 230px;
+    height: auto;
+    max-height: 90px;
+    object-fit: contain;
+    display: block;
+}
+
+
+.nav-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nav-menu a {
+    text-decoration: none;
+    color: #262626;
+    font-weight: 800;
+    padding: 14px 15px;
+    border-radius: 10px;
+    transition: 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.nav-menu a:hover {
+    background: rgba(255, 255, 255, 0.45);
+    border-color: rgba(212, 5, 17, 0.25);
+}
+
+.nav-menu a.active {
+    background: #d40511;
+    color: #ffffff;
+    box-shadow: 0 8px 18px rgba(212, 5, 17, 0.25);
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(120, 80, 0, 0.2);
+    border-radius: 14px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sidebar-footer span {
+    font-size: 12px;
+    color: #6b4b00;
+    font-weight: 700;
+}
+
+.sidebar-footer strong {
+    color: #d40511;
+    font-size: 14px;
+}
+
+.main-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.topbar {
+    height: $header-height;
+    background: #ffffff;
+    border-bottom: 1px solid #dedede;
+    padding: 0 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.topbar h2 {
+    margin: 0;
+    color: #d40511;
+    font-size: 25px;
+    font-weight: 900;
+}
+
+.topbar p {
+    margin: 5px 0 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.user-pill {
+    background: #fff4bf;
+    border: 1px solid #ffcc00;
+    color: #222;
+    font-weight: 800;
+    padding: 10px 16px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.user-dot {
+    width: 10px;
+    height: 10px;
+    background: #1f9d55;
+    border-radius: 50%;
+}
+
+.content-area {
+    padding: 28px;
+}

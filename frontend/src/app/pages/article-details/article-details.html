@@ -1,0 +1,159 @@
+<div class="details-page">
+    <a routerLink="/articles" class="back-link">← Back to Knowledge Articles</a>
+
+    <div *ngIf="loading" class="info-box">Loading article details...</div>
+
+    <div *ngIf="errorMessage" class="alert error">
+        {{ errorMessage }}
+    </div>
+
+    <div *ngIf="statusMessage" class="alert success">
+        {{ statusMessage }}
+    </div>
+
+    <ng-container *ngIf="article && !loading">
+        <section class="article-hero">
+            <div>
+                <span class="eyebrow">Knowledge Article</span>
+                <h1>{{ article.title }}</h1>
+                <p>{{ article.summary }}</p>
+            </div>
+
+            <span class="status-badge" [ngClass]="getStatusClass(article.status)">
+                {{ article.status }}
+            </span>
+        </section>
+
+        <section class="actions-card">
+            <div>
+                <h2>Workflow Actions</h2>
+                <p>Move the article through the controlled review and publishing process.</p>
+            </div>
+
+            <div class="action-buttons">
+                <button class="secondary-btn" type="button" [disabled]="!canReview()"
+                    (click)="updateStatus('REVIEWED')">
+                    Mark as Reviewed
+                </button>
+
+                <button class="primary-btn" type="button" [disabled]="!canPublish()"
+                    (click)="updateStatus('PUBLISHED')">
+                    Publish Article
+                </button>
+
+                <button class="danger-btn" type="button" [disabled]="!canArchive()" (click)="updateStatus('ARCHIVED')">
+                    Archive
+                </button>
+
+                <button class="secondary-btn" type="button" [disabled]="!canRestore()" (click)="updateStatus('DRAFT')">
+                    Restore as Draft
+                </button>
+            </div>
+        </section>
+
+        <section class="details-grid">
+            <div class="main-card">
+                <h2>Structured SOP Content</h2>
+                <div class="content-box">
+                    {{ article.content }}
+                </div>
+
+                <h2>Raw Source Input</h2>
+                <div class="source-box">
+                    {{ article.sourceText || 'No raw source text available.' }}
+                </div>
+            </div>
+
+            <aside class="side-card">
+                <h2>Article Metadata</h2>
+
+                <div class="meta-row">
+                    <span>Source Type</span>
+                    <strong>{{ article.sourceType }}</strong>
+                </div>
+
+                <div class="meta-row">
+                    <span>Creator</span>
+                    <strong>{{ article.createdBy?.name || 'Unknown' }}</strong>
+                </div>
+
+                <div class="meta-row">
+                    <span>Reviewer</span>
+                    <strong>{{ article.reviewedBy?.name || '-' }}</strong>
+                </div>
+
+                <div class="meta-row">
+                    <span>Publisher</span>
+                    <strong>{{ article.publishedBy?.name || '-' }}</strong>
+                </div>
+
+                <div class="meta-row">
+                    <span>Tags</span>
+                    <strong>{{ getTagsText() }}</strong>
+                </div>
+
+                <div class="meta-row">
+                    <span>Created</span>
+                    <strong>{{ article.createdAt | date: 'medium' }}</strong>
+                </div>
+
+                <div class="meta-row">
+                    <span>Updated</span>
+                    <strong>{{ article.updatedAt | date: 'medium' }}</strong>
+                </div>
+            </aside>
+        </section>
+
+        <section class="attachments-card">
+            <div class="section-header">
+                <div>
+                    <h2>Source Attachments</h2>
+                    <p>Attach PDF, DOCX, TXT, PNG, or JPG evidence files.</p>
+                </div>
+
+                <label class="upload-btn">
+                    Upload File
+                    <input type="file" hidden (change)="onFileSelected($event)" />
+                </label>
+            </div>
+
+            <div class="attachment-list" *ngIf="article.attachments?.length; else noAttachments">
+                <div class="attachment-row" *ngFor="let file of article.attachments">
+                    <div>
+                        <strong>{{ file.fileName }}</strong>
+                        <span>{{ file.fileType }} · {{ file.fileSize || 0 }} bytes</span>
+                    </div>
+                    <span>{{ file.uploadedAt | date: 'medium' }}</span>
+                </div>
+            </div>
+
+            <ng-template #noAttachments>
+                <div class="empty-box">No attachments uploaded yet.</div>
+            </ng-template>
+        </section>
+
+        <section class="history-grid">
+            <div class="history-card">
+                <h2>Version History</h2>
+
+                <div class="history-row" *ngFor="let version of article.versions">
+                    <strong>Version {{ version.versionNo }}</strong>
+                    <span>{{ version.status }} · {{ version.createdAt | date: 'medium' }}</span>
+                    <p>{{ version.changeNote || 'No change note.' }}</p>
+                </div>
+            </div>
+
+            <div class="history-card">
+                <h2>Status History</h2>
+
+                <div class="history-row" *ngFor="let history of article.statusHistories">
+                    <strong>
+                        {{ history.fromStatus || 'NEW' }} → {{ history.toStatus }}
+                    </strong>
+                    <span>{{ history.changedBy.name }} · {{ history.changedAt | date: 'medium' }}</span>
+                    <p>{{ history.note || 'No note.' }}</p>
+                </div>
+            </div>
+        </section>
+    </ng-container>
+</div>
