@@ -3,6 +3,8 @@ import { PrismaClient, UserRole } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
+import * as bcrypt from 'bcrypt';
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
@@ -10,30 +12,38 @@ const pool = new Pool({
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
+
+
 async function main() {
+
+  const adminPassword = await bcrypt.hash('admin123', 10);
+  const editorPassword = await bcrypt.hash('editor123', 10);
+  const reviewerPassword = await bcrypt.hash('reviewer123', 10);
+  const rpaPassword = await bcrypt.hash('rpa123', 10);
+
   const users = [
     {
       name: 'Booz',
       email: 'booz@dhl-kb.com',
-      passwordHash: 'kwookedoozkius',
+      passwordHash: adminPassword,
       role: UserRole.ADMIN,
     },
     {
       name: 'Biggus',
       email: 'biggus@dhl-kb.com',
-      passwordHash: 'Ayyy Ayyy Ayyy',
+      passwordHash: editorPassword,
       role: UserRole.EDITOR,
     },
     {
       name: 'Indus',
       email: 'indus@dhl-kb.com',
-      passwordHash: 'middestofmid',
+      passwordHash: reviewerPassword,
       role: UserRole.REVIEWER,
     },
     {
       name: 'RPA Bot',
       email: 'rpa-bot@dhl-kb.com',
-      passwordHash: 'temporary-rpa-password-hash',
+      passwordHash: rpaPassword,
       role: UserRole.RPA_BOT,
     },
   ];
@@ -44,6 +54,7 @@ async function main() {
       update: {
         name: user.name,
         role: user.role,
+        passwordHash: user.passwordHash,
       },
       create: user,
     });

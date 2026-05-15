@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Article, ArticleStatus } from '../../models/article.model';
 import { ArticlesService } from '../../services/articles.service';
 import { AttachmentsService } from '../../services/attachments.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-article-details',
@@ -17,13 +18,20 @@ export class ArticleDetails implements OnInit {
   errorMessage = '';
   statusMessage = '';
 
-  currentUserId = 1;
+  get currentUser() {
+    return this.authService.getUser();
+  }
+
+  hasRole(roles: string[]) {
+    return this.authService.hasRole(roles);
+  }
 
   constructor(
     private route: ActivatedRoute,
     private articlesService: ArticlesService,
     private attachmentsService: AttachmentsService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService,
   ) { }
 
   ngOnInit() {
@@ -68,10 +76,17 @@ export class ArticleDetails implements OnInit {
     this.statusMessage = '';
     this.errorMessage = '';
 
+    const user = this.currentUser;
+
+    if (!user) {
+      this.errorMessage = 'You must be logged in to update article status.';
+      return;
+    }
+
     this.articlesService
       .updateArticleStatus(this.article.id, {
         status,
-        changedById: this.currentUserId,
+        changedById: user.id,
         note: `Status changed to ${status} from article details page`,
       })
       .subscribe({
@@ -125,18 +140,34 @@ export class ArticleDetails implements OnInit {
   }
 
   canReview() {
-    return this.article?.status === 'DRAFT';
+    return (
+      this.article?.status === 'DRAFT' &&
+      this.hasRole(['ADMIN', 'REVIEWER'])
+    );
   }
 
   canPublish() {
-    return this.article?.status === 'REVIEWED';
+    return (
+      this.article?.status === 'REVIEWED' &&
+      this.hasRole(['ADMIN', 'REVIEWER'])
+    );
   }
 
   canArchive() {
-    return this.article?.status !== 'ARCHIVED';
+    return (
+      this.article?.status !== 'ARCHIVED' &&
+      this.hasRole(['ADMIN'])
+    );
   }
 
   canRestore() {
-    return this.article?.status === 'ARCHIVED';
+    return (
+      this.article?.status === 'ARCHIVED' &&
+      this.hasRole(['ADMIN'])
+    );
+  }
+
+  canUploadAttachment() {
+    return this.hasRole(['ADMIN', 'EDITOR']);
   }
 }

@@ -147,3 +147,23 @@ $header-height: 130px;
 .content-area {
     padding: 28px;
 }
+
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logout-btn {
+    border: none;
+    background: #d40511;
+    color: #ffffff;
+    font-weight: 900;
+    border-radius: 999px;
+    padding: 10px 16px;
+    cursor: pointer;
+}
+
+.logout-btn:hover {
+    background: #b8040f;
+}

@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { SourceType } from '../../models/article.model';
 import { ArticlesService } from '../../services/articles.service';
 import { AttachmentsService } from '../../services/attachments.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-upload-console',
@@ -38,13 +39,15 @@ export class UploadConsole {
   successMessage = '';
   createdArticleId?: number;
 
-  // Booz admin user
-  createdById = 1;
+  get currentUser() {
+    return this.authService.getUser();
+  }
 
   constructor(
     private articlesService: ArticlesService,
     private attachmentsService: AttachmentsService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService,
   ) { }
 
   onFileSelected(event: Event) {
@@ -113,6 +116,13 @@ export class UploadConsole {
     const duplicateBaseText = `${this.title} ${this.summary} ${this.content} ${this.sourceText} ${this.selectedFile?.name || ''}`;
     const sourceHash = this.generateSimpleHash(duplicateBaseText);
 
+    const user = this.currentUser;
+
+    if (!user) {
+      this.errorMessage = 'You must be logged in to use the upload console.';
+      return;
+    }
+
     this.articlesService
       .createArticle({
         title: this.title,
@@ -121,7 +131,7 @@ export class UploadConsole {
         sourceText: this.sourceText,
         sourceType: this.sourceType,
         sourceHash,
-        createdById: this.createdById,
+        createdById: user.id,
         tagNames: this.selectedTagNames,
       })
       .subscribe({

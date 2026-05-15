@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { SourceType, Tag } from '../../models/article.model';
 import { ArticlesService } from '../../services/articles.service';
 import { TagsService } from '../../services/tags.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-create-article',
@@ -25,14 +26,16 @@ export class CreateArticle implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  // Booz admin user from seeded data
-  createdById = 1;
+  get currentUser() {
+    return this.authService.getUser();
+  }
 
   constructor(
     private articlesService: ArticlesService,
     private tagsService: TagsService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService,
   ) { }
 
   ngOnInit() {
@@ -81,6 +84,13 @@ export class CreateArticle implements OnInit {
 
     const sourceHash = `manual-${Date.now()}-${this.title.toLowerCase().replace(/\s+/g, '-')}`;
 
+    const user = this.currentUser;
+
+    if (!user) {
+      this.errorMessage = 'You must be logged in to create a draft.';
+      return;
+    }
+
     this.articlesService
       .createArticle({
         title: this.title,
@@ -89,7 +99,7 @@ export class CreateArticle implements OnInit {
         sourceText: this.sourceText,
         sourceType: this.sourceType,
         sourceHash,
-        createdById: this.createdById,
+        createdById: user.id,
         tagNames: this.selectedTagNames,
       })
       .subscribe({

@@ -8,6 +8,8 @@ import { ArticlesModule } from './articles/articles.module';
 import { TagsModule } from './tags/tags.module';
 import { AutomationModule } from './automation/automation.module';
 import { AttachmentsModule } from './attachments/attachments.module';
+import { AuthModule } from './auth/auth.module';
+import { UsersAdminModule } from './users-admin/users-admin.module';
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { AttachmentsModule } from './attachments/attachments.module';
     TagsModule,
     AutomationModule,
     AttachmentsModule,
+    AuthModule,
+    UsersAdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

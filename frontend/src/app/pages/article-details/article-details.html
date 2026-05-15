@@ -111,7 +111,7 @@
                     <p>Attach PDF, DOCX, TXT, PNG, or JPG evidence files.</p>
                 </div>
 
-                <label class="upload-btn">
+                <label class="upload-btn" *ngIf="canUploadAttachment()">
                     Upload File
                     <input type="file" hidden (change)="onFileSelected($event)" />
                 </label>

@@ -47,7 +47,9 @@
 
                 <div class="form-group">
                     <label>Creator</label>
-                    <div class="readonly-box">Booz · Admin</div>
+                    <div class="readonly-box">
+                        {{ currentUser?.name }} · {{ currentUser?.role }}
+                    </div>
                 </div>
 
                 <div class="form-group full">
