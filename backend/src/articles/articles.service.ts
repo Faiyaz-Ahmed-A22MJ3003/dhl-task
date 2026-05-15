@@ -8,6 +8,32 @@ import { UpdateArticleStatusDto } from './dto/update-article-status.dto';
 @Injectable()
 export class ArticlesService {
   constructor(private prisma: PrismaService) { }
+  
+  async checkDuplicate(sourceHash: string) {
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+    const existingArticle = await this.prisma.article.findFirst({
+      where: {
+        sourceHash,
+        createdAt: {
+          gte: fourteenDaysAgo,
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        sourceHash: true,
+        createdAt: true,
+      },
+    });
+
+    return {
+      isDuplicate: !!existingArticle,
+      article: existingArticle,
+    };
+  }
 
   async findAll(query: {
     search?: string;

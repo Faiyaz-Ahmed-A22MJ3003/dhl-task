@@ -24,6 +24,10 @@
       <a *ngIf="hasRole(['ADMIN', 'REVIEWER'])" routerLink="/automation" routerLinkActive="active">
         Automation Runs
       </a>
+
+      <a *ngIf="hasRole(['ADMIN'])" routerLink="/admin/users" routerLinkActive="active">
+        User Management
+      </a>
     </nav>
 
     <div class="sidebar-footer">

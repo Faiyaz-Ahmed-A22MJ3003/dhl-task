@@ -18,6 +18,7 @@ import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CheckDuplicateDto } from './dto/check-duplicate.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 
@@ -39,6 +40,12 @@ export class ArticlesController {
       tag,
       creatorId,
     });
+  }
+
+  @Post('check-duplicate')
+  @Roles(UserRole.ADMIN, UserRole.EDITOR, UserRole.RPA_BOT)
+  checkDuplicate(@Body() body: CheckDuplicateDto) {
+    return this.articlesService.checkDuplicate(body.sourceHash);
   }
 
   @Get(':id')

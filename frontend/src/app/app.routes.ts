@@ -7,6 +7,7 @@ import { ArticleDetails } from './pages/article-details/article-details';
 import { AutomationRuns } from './pages/automation-runs/automation-runs';
 import { UploadConsole } from './pages/upload-console/upload-console';
 import { authGuard } from './services/auth.guard';
+import { AdminUsers } from './pages/admin-users/admin-users';
 
 export const routes: Routes = [
   {
@@ -46,6 +47,11 @@ export const routes: Routes = [
   {
     path: 'upload',
     component: UploadConsole,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'admin/users',
+    component: AdminUsers,
     canActivate: [authGuard],
   },
   {
