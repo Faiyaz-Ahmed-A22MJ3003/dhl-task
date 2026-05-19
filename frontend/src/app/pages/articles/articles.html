@@ -6,7 +6,9 @@
             <p>Search, filter, and monitor SOP articles created from logistics operation inputs.</p>
         </div>
 
-        <a class="primary-btn" routerLink="/articles/create">Create Draft</a>
+        <a *ngIf="hasRole(['ADMIN', 'EDITOR'])" class="primary-btn" routerLink="/articles/create">
+            Create Draft
+        </a>
     </div>
 
     <section class="filter-card">

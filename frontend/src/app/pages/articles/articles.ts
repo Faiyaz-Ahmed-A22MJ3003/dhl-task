@@ -5,6 +5,7 @@ import { Article, ArticleStatus, Tag } from '../../models/article.model';
 import { ArticlesService } from '../../services/articles.service';
 import { TagsService } from '../../services/tags.service';
 import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-articles',
@@ -26,8 +27,13 @@ export class Articles implements OnInit {
   constructor(
     private articlesService: ArticlesService,
     private tagsService: TagsService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService,
   ) { }
+
+  hasRole(roles: string[]): boolean {
+    return this.authService.hasRole(roles);
+  }
 
   ngOnInit() {
     this.loadTags();

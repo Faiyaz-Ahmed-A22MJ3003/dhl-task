@@ -1,14 +1,16 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Article, ArticleStatus } from '../../models/article.model';
+import { Article, ArticleStatus, SourceType } from '../../models/article.model';
 import { ArticlesService } from '../../services/articles.service';
 import { AttachmentsService } from '../../services/attachments.service';
 import { AuthService } from '../../services/auth.service';
+import { TagsService } from '../../services/tags.service';
 
 @Component({
   selector: 'app-article-details',
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './article-details.html',
   styleUrl: './article-details.scss',
 })
@@ -17,6 +19,18 @@ export class ArticleDetails implements OnInit {
   loading = false;
   errorMessage = '';
   statusMessage = '';
+
+  tags: any[] = [];
+  editMode = false;
+  saving = false;
+  editModel = {
+    title: '',
+    summary: '',
+    content: '',
+    sourceText: '',
+    sourceType: 'TEXT' as SourceType,
+    tagNames: [] as string[],
+  };
 
   get currentUser() {
     return this.authService.getUser();
@@ -30,6 +44,7 @@ export class ArticleDetails implements OnInit {
     private route: ActivatedRoute,
     private articlesService: ArticlesService,
     private attachmentsService: AttachmentsService,
+    private tagsService: TagsService,
     private cdr: ChangeDetectorRef,
     private authService: AuthService,
   ) { }
@@ -70,8 +85,111 @@ export class ArticleDetails implements OnInit {
     });
   }
 
-  updateStatus(status: ArticleStatus) {
+  loadTags() {
+    this.tagsService.getTags().subscribe({
+      next: (tags) => {
+        this.tags = tags;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to load tags.';
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  canEditArticle() {
+    return this.hasRole(['ADMIN', 'EDITOR']);
+  }
+
+  startEdit() {
     if (!this.article) return;
+
+    this.editModel = {
+      title: this.article.title,
+      summary: this.article.summary,
+      content: this.article.content,
+      sourceText: this.article.sourceText || '',
+      sourceType: this.article.sourceType,
+      tagNames:
+        this.article.articleTags?.map((item) => item.tag.name) || [],
+    };
+
+    this.editMode = true;
+    this.errorMessage = '';
+    this.statusMessage = '';
+
+    if (this.tags.length === 0) {
+      this.loadTags();
+    }
+  }
+
+  cancelEdit() {
+    this.editMode = false;
+    this.errorMessage = '';
+  }
+
+  saveArticleDetails() {
+    if (!this.article || this.saving) return;
+
+    this.errorMessage = '';
+    this.statusMessage = '';
+
+    if (
+      !this.editModel.title.trim() ||
+      !this.editModel.summary.trim() ||
+      !this.editModel.content.trim()
+    ) {
+      this.errorMessage = 'Title, summary, and content are required.';
+      this.scrollToTop();
+      return;
+    }
+
+    this.saving = true;
+
+    this.articlesService
+      .updateArticle(this.article.id, {
+        title: this.editModel.title.trim(),
+        summary: this.editModel.summary.trim(),
+        content: this.editModel.content.trim(),
+        sourceText: this.editModel.sourceText,
+        sourceType: this.editModel.sourceType,
+        tagNames: this.editModel.tagNames,
+      })
+      .subscribe({
+        next: () => {
+          this.saving = false;
+          this.editMode = false;
+          this.statusMessage = 'Article details updated successfully.';
+          this.scrollToTop();
+          this.loadArticle();
+        },
+        error: (error) => {
+          this.saving = false;
+          this.errorMessage =
+            error?.error?.message || 'Failed to update article details.';
+          this.scrollToTop();
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  isEditTagSelected(tagName: string) {
+    return this.editModel.tagNames.includes(tagName);
+  }
+
+  toggleEditTag(tagName: string) {
+    if (this.isEditTagSelected(tagName)) {
+      this.editModel.tagNames = this.editModel.tagNames.filter(
+        (name) => name !== tagName,
+      );
+    } else {
+      this.editModel.tagNames = [...this.editModel.tagNames, tagName];
+    }
+  }
+
+  updateStatus(status: ArticleStatus) {
+    if (!this.article || this.editMode) return;
 
     this.statusMessage = '';
     this.errorMessage = '';

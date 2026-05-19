@@ -21,6 +21,11 @@
         </a>
     </div>
 
+    <div *ngIf="aiLoading && aiStatusMessage" class="alert ai-status">
+        <span class="ai-spinner" aria-hidden="true"></span>
+        {{ aiStatusMessage }}
+    </div>
+
     <section class="upload-grid">
         <div class="upload-card">
             <h2>Source Input</h2>
@@ -28,9 +33,9 @@
                 Attach supporting files or paste the raw logistics message for drafting.
             </p>
 
-            <div class="file-drop">
+            <div class="file-drop" [class.ai-busy]="aiLoading">
                 <input id="sourceFile" name="sourceFile" type="file" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg"
-                    (change)="onFileSelected($event)" />
+                    [disabled]="aiLoading" (change)="onFileSelected($event)" />
 
                 <div class="file-help">
                     <strong>{{ selectedFile ? selectedFile.name : 'Choose source file' }}</strong>
@@ -40,7 +45,7 @@
 
             <div class="form-group">
                 <label for="sourceType">Detected Source Type</label>
-                <select id="sourceType" name="sourceType" [(ngModel)]="sourceType">
+                <select id="sourceType" name="sourceType" [(ngModel)]="sourceType" [disabled]="aiLoading">
                     <option value="TEXT">Text</option>
                     <option value="PDF">PDF</option>
                     <option value="DOCX">DOCX</option>
@@ -54,6 +59,7 @@
             <div class="form-group">
                 <label for="sourceText">Raw Source Text</label>
                 <textarea id="sourceText" name="sourceText" rows="10" [(ngModel)]="sourceText"
+                    [class.typing-active]="typingField === 'sourceText'" [readonly]="aiLoading"
                     placeholder="Paste raw email, chat, OCR text, handwritten note transcription, or messy SOP input here"></textarea>
             </div>
         </div>
@@ -67,34 +73,39 @@
             <div class="form-group">
                 <label for="title">Article Title</label>
                 <input id="title" name="title" type="text" [(ngModel)]="title"
+                    [class.typing-active]="typingField === 'title'" [readonly]="aiLoading"
                     placeholder="Example: Customs Delay Escalation SOP" />
             </div>
 
             <div class="form-group">
                 <label for="summary">Summary</label>
                 <textarea id="summary" name="summary" rows="3" [(ngModel)]="summary"
+                    [class.typing-active]="typingField === 'summary'" [readonly]="aiLoading"
                     placeholder="Short overview of the knowledge article"></textarea>
             </div>
 
             <div class="form-group">
                 <label for="content">Structured SOP Content</label>
                 <textarea id="content" name="content" rows="10" [(ngModel)]="content"
+                    [class.typing-active]="typingField === 'content'" [readonly]="aiLoading"
                     placeholder="Write clean step-by-step SOP content here"></textarea>
             </div>
 
             <div class="form-group">
                 <label>Tags</label>
                 <div class="tag-list">
-                    <button type="button" class="tag-chip" *ngFor="let tag of availableTags"
-                        [class.selected]="isTagSelected(tag)" (click)="toggleTag(tag)">
-                        {{ tag }}
+                    <button type="button" class="tag-chip" *ngFor="let tag of tags"
+                        [class.selected]="isTagSelected(tag.name)" [disabled]="aiLoading"
+                        (click)="toggleTag(tag.name)">
+                        {{ tag.name }}
                     </button>
                 </div>
             </div>
 
             <div class="form-actions">
-                <button class="primary-btn" type="button" [disabled]="loading" (click)="submitUpload()">
-                    {{ loading ? 'Processing Upload...' : 'Create Draft from Upload' }}
+                <button class="primary-btn" type="button" [disabled]="loading || aiLoading"
+                    (click)="submitUpload()">
+                    {{ loading ? 'Processing Upload...' : aiLoading ? 'AI Generating Draft...' : 'Create Draft from Upload' }}
                 </button>
             </div>
         </div>

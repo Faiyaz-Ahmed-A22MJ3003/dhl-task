@@ -40,6 +40,10 @@ export class ArticlesService {
         return this.http.post<Article>(this.apiUrl, data);
     }
 
+    updateArticle(id: number, payload: any) {
+        return this.http.patch<Article>(`${this.apiUrl}/${id}`, payload);
+    }
+
     updateArticleStatus(id: number, data: UpdateArticleStatusDto) {
         return this.http.patch<Article>(`${this.apiUrl}/${id}/status`, data);
     }

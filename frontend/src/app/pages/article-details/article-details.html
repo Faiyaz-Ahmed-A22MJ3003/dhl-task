@@ -13,15 +13,53 @@
 
     <ng-container *ngIf="article && !loading">
         <section class="article-hero">
-            <div>
+            <div class="hero-content">
                 <span class="eyebrow">Knowledge Article</span>
-                <h1>{{ article.title }}</h1>
-                <p>{{ article.summary }}</p>
+
+                <ng-container *ngIf="!editMode">
+                    <h1>{{ article.title }}</h1>
+                    <p>{{ article.summary }}</p>
+                </ng-container>
+
+                <ng-container *ngIf="editMode">
+                    <div class="edit-hero-fields">
+                        <label for="edit-title">Title</label>
+                        <input id="edit-title" name="title" type="text" [(ngModel)]="editModel.title"
+                            placeholder="Article title" />
+
+                        <label for="edit-summary">Summary</label>
+                        <textarea id="edit-summary" name="summary" rows="3" [(ngModel)]="editModel.summary"
+                            placeholder="Brief summary"></textarea>
+                    </div>
+                </ng-container>
             </div>
 
             <span class="status-badge" [ngClass]="getStatusClass(article.status)">
                 {{ article.status }}
             </span>
+        </section>
+
+        <section class="edit-card" *ngIf="canEditArticle()">
+            <div *ngIf="!editMode">
+                <h2>Edit Article</h2>
+                <p>Update title, summary, content, source input, and tags.</p>
+            </div>
+
+            <div class="edit-actions" *ngIf="!editMode">
+                <button class="secondary-btn" type="button" (click)="startEdit()">
+                    Edit Article Details
+                </button>
+            </div>
+
+            <div class="edit-actions" *ngIf="editMode">
+                <button class="secondary-btn" type="button" [disabled]="saving" (click)="cancelEdit()">
+                    Cancel Edit
+                </button>
+
+                <button class="primary-btn" type="button" [disabled]="saving" (click)="saveArticleDetails()">
+                    {{ saving ? 'Saving Changes...' : 'Save Changes' }}
+                </button>
+            </div>
         </section>
 
         <section class="actions-card">
@@ -31,21 +69,23 @@
             </div>
 
             <div class="action-buttons">
-                <button class="secondary-btn" type="button" [disabled]="!canReview()"
+                <button class="secondary-btn" type="button" [disabled]="!canReview() || editMode"
                     (click)="updateStatus('REVIEWED')">
                     Mark as Reviewed
                 </button>
 
-                <button class="primary-btn" type="button" [disabled]="!canPublish()"
+                <button class="primary-btn" type="button" [disabled]="!canPublish() || editMode"
                     (click)="updateStatus('PUBLISHED')">
                     Publish Article
                 </button>
 
-                <button class="danger-btn" type="button" [disabled]="!canArchive()" (click)="updateStatus('ARCHIVED')">
+                <button class="danger-btn" type="button" [disabled]="!canArchive() || editMode"
+                    (click)="updateStatus('ARCHIVED')">
                     Archive
                 </button>
 
-                <button class="secondary-btn" type="button" [disabled]="!canRestore()" (click)="updateStatus('DRAFT')">
+                <button class="secondary-btn" type="button" [disabled]="!canRestore() || editMode"
+                    (click)="updateStatus('DRAFT')">
                     Restore as Draft
                 </button>
             </div>
@@ -54,14 +94,22 @@
         <section class="details-grid">
             <div class="main-card">
                 <h2>Structured SOP Content</h2>
-                <div class="content-box">
+
+                <div class="content-box" *ngIf="!editMode">
                     {{ article.content }}
                 </div>
 
+                <textarea *ngIf="editMode" class="edit-textarea" name="content" rows="8"
+                    [(ngModel)]="editModel.content" placeholder="Structured SOP content"></textarea>
+
                 <h2>Raw Source Input</h2>
-                <div class="source-box">
+
+                <div class="source-box" *ngIf="!editMode">
                     {{ article.sourceText || 'No raw source text available.' }}
                 </div>
+
+                <textarea *ngIf="editMode" class="edit-textarea source" name="sourceText" rows="5"
+                    [(ngModel)]="editModel.sourceText" placeholder="Raw source input"></textarea>
             </div>
 
             <aside class="side-card">
@@ -69,7 +117,17 @@
 
                 <div class="meta-row">
                     <span>Source Type</span>
-                    <strong>{{ article.sourceType }}</strong>
+                    <strong *ngIf="!editMode">{{ article.sourceType }}</strong>
+                    <select *ngIf="editMode" name="sourceType" [(ngModel)]="editModel.sourceType"
+                        class="edit-select">
+                        <option value="TEXT">Text</option>
+                        <option value="PDF">PDF</option>
+                        <option value="DOCX">DOCX</option>
+                        <option value="IMAGE">Image</option>
+                        <option value="EMAIL">Email</option>
+                        <option value="CHAT">Chat</option>
+                        <option value="OTHER">Other</option>
+                    </select>
                 </div>
 
                 <div class="meta-row">
@@ -87,9 +145,15 @@
                     <strong>{{ article.publishedBy?.name || '-' }}</strong>
                 </div>
 
-                <div class="meta-row">
+                <div class="meta-row tags-meta" [class.full-width]="editMode">
                     <span>Tags</span>
-                    <strong>{{ getTagsText() }}</strong>
+                    <strong *ngIf="!editMode">{{ getTagsText() }}</strong>
+                    <div class="tag-list" *ngIf="editMode">
+                        <button type="button" class="tag-chip" *ngFor="let tag of tags"
+                            [class.selected]="isEditTagSelected(tag.name)" (click)="toggleEditTag(tag.name)">
+                            {{ tag.name }}
+                        </button>
+                    </div>
                 </div>
 
                 <div class="meta-row">

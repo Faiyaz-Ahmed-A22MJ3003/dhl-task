@@ -1,11 +1,25 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { SourceType } from '../../models/article.model';
+import { HttpClient } from '@angular/common/http';
+import { Subscription } from 'rxjs';
+import { SourceType, Tag } from '../../models/article.model';
 import { ArticlesService } from '../../services/articles.service';
 import { AttachmentsService } from '../../services/attachments.service';
 import { AuthService } from '../../services/auth.service';
+import { TagsService } from '../../services/tags.service';
+import { API_BASE_URL } from '../../services/api';
+
+type AiGeneratedDraft = {
+  title: string;
+  summary: string;
+  content: string;
+  sourceText: string;
+  tagNames: string[];
+};
+
+type DraftField = 'title' | 'summary' | 'sourceText' | 'content';
 
 @Component({
   selector: 'app-upload-console',
@@ -13,7 +27,7 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './upload-console.html',
   styleUrl: './upload-console.scss',
 })
-export class UploadConsole {
+export class UploadConsole implements OnInit, OnDestroy {
   title = '';
   summary = '';
   sourceText = '';
@@ -21,23 +35,19 @@ export class UploadConsole {
   sourceType: SourceType = 'TEXT';
   selectedFile?: File;
 
-  selectedTagNames: string[] = ['SOP'];
-  availableTags = [
-    'Delivery',
-    'Warehouse',
-    'Customs',
-    'Finance',
-    'Invoice',
-    'Customer Support',
-    'SOP',
-    'System Error',
-    'Training',
-  ];
+  tags: Tag[] = [];
+  selectedTagNames: string[] = [];
 
   loading = false;
+  aiLoading = false;
+  aiStatusMessage = '';
+  typingField: DraftField | null = null;
   errorMessage = '';
   successMessage = '';
   createdArticleId?: number;
+
+  private typewriterRunId = 0;
+  private aiGenerateSub?: Subscription;
 
   get currentUser() {
     return this.authService.getUser();
@@ -46,9 +56,33 @@ export class UploadConsole {
   constructor(
     private articlesService: ArticlesService,
     private attachmentsService: AttachmentsService,
+    private tagsService: TagsService,
+    private http: HttpClient,
     private cdr: ChangeDetectorRef,
     private authService: AuthService,
-  ) { }
+  ) {}
+
+  ngOnInit() {
+    this.loadTags();
+  }
+
+  ngOnDestroy() {
+    this.aiGenerateSub?.unsubscribe();
+    this.cancelTypewriter();
+  }
+
+  loadTags() {
+    this.tagsService.getTags().subscribe({
+      next: (tags) => {
+        this.tags = tags;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to load tags.';
+        this.cdr.detectChanges();
+      },
+    });
+  }
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -57,6 +91,9 @@ export class UploadConsole {
     if (!file) return;
 
     this.selectedFile = file;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.createdArticleId = undefined;
 
     const fileName = file.name.toLowerCase();
 
@@ -71,9 +108,134 @@ export class UploadConsole {
     } else {
       this.sourceType = 'OTHER';
     }
+
+    this.startAiGeneration(file);
+  }
+
+  private startAiGeneration(file: File) {
+    this.aiGenerateSub?.unsubscribe();
+    this.cancelTypewriter();
+
+    this.aiLoading = true;
+    this.aiStatusMessage = 'AI is reading the uploaded source...';
+    this.cdr.detectChanges();
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    this.aiGenerateSub = this.http
+      .post<AiGeneratedDraft>(`${API_BASE_URL}/ai/generate-file`, formData)
+      .subscribe({
+        next: (draft) => {
+          this.applyAiDraft(draft);
+        },
+        error: () => {
+          this.aiLoading = false;
+          this.aiStatusMessage = '';
+          this.typingField = null;
+          this.errorMessage =
+            'AI draft generation failed. You can still fill the fields manually and create a draft.';
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  private applyAiDraft(draft: AiGeneratedDraft) {
+    this.title = '';
+    this.summary = '';
+    this.sourceText = '';
+    this.content = '';
+    this.selectedTagNames = [];
+    this.cdr.detectChanges();
+
+    void this.runTypewriter(draft);
+  }
+
+  private cancelTypewriter() {
+    this.typewriterRunId += 1;
+    this.typingField = null;
+  }
+
+  private async runTypewriter(draft: AiGeneratedDraft): Promise<void> {
+    const runId = ++this.typewriterRunId;
+    const isCancelled = () => runId !== this.typewriterRunId;
+
+    const fields: Array<[DraftField, string]> = [
+      ['title', draft.title ?? ''],
+      ['summary', draft.summary ?? ''],
+      ['sourceText', draft.sourceText ?? ''],
+      ['content', draft.content ?? ''],
+    ];
+
+    for (const [field, fullText] of fields) {
+      if (isCancelled()) return;
+      await this.typewriteInto(field, fullText, isCancelled);
+    }
+
+    if (isCancelled()) return;
+
+    this.selectedTagNames = (draft.tagNames ?? []).filter((name) =>
+      this.tags.some((tag) => tag.name === name),
+    );
+
+    this.aiLoading = false;
+    this.aiStatusMessage = '';
+    this.typingField = null;
+    this.successMessage = 'AI draft generated successfully. Review it before saving.';
+    this.cdr.detectChanges();
+  }
+
+  private typewriteInto(
+    field: DraftField,
+    fullText: string,
+    isCancelled: () => boolean,
+  ): Promise<void> {
+    return new Promise((resolve) => {
+      if (!fullText.length) {
+        resolve();
+        return;
+      }
+
+      this.typingField = field;
+      let index = 0;
+      const step = this.getTypewriterStep(fullText.length);
+      const delayMs = 14;
+
+      const tick = () => {
+        if (isCancelled()) {
+          resolve();
+          return;
+        }
+
+        const nextIndex = Math.min(index + step, fullText.length);
+        this[field] = fullText.slice(0, nextIndex);
+        index = nextIndex;
+        this.cdr.detectChanges();
+
+        if (index < fullText.length) {
+          setTimeout(tick, delayMs);
+        } else {
+          this.typingField = null;
+          this.cdr.detectChanges();
+          resolve();
+        }
+      };
+
+      tick();
+    });
+  }
+
+  private getTypewriterStep(textLength: number): number {
+    if (textLength > 2500) return 6;
+    if (textLength > 1200) return 4;
+    if (textLength > 500) return 3;
+    if (textLength > 150) return 2;
+    return 1;
   }
 
   toggleTag(tagName: string) {
+    if (this.aiLoading) return;
+
     if (this.selectedTagNames.includes(tagName)) {
       this.selectedTagNames = this.selectedTagNames.filter((name) => name !== tagName);
     } else {
@@ -100,7 +262,7 @@ export class UploadConsole {
   }
 
   submitUpload() {
-    if (this.loading) return;
+    if (this.loading || this.aiLoading) return;
 
     this.errorMessage = '';
     this.successMessage = '';
@@ -174,7 +336,7 @@ export class UploadConsole {
     this.content = '';
     this.sourceType = 'TEXT';
     this.selectedFile = undefined;
-    this.selectedTagNames = ['SOP'];
+    this.selectedTagNames = [];
 
     window.scrollTo({
       top: 0,

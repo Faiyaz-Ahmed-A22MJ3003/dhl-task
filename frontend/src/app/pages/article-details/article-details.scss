@@ -285,3 +285,135 @@ button:disabled {
     color: #166534;
     border-left: 5px solid #1f9d55;
 }
+
+.edit-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 22px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.07);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.edit-card h2 {
+    margin: 0;
+    color: #d40511;
+    font-weight: 900;
+}
+
+.edit-card p {
+    margin: 6px 0 0;
+    color: #666;
+}
+
+.edit-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.hero-content {
+    flex: 1;
+}
+
+.edit-hero-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.edit-hero-fields label {
+    font-weight: 900;
+    font-size: 13px;
+    color: #ffe2e5;
+}
+
+.edit-hero-fields input,
+.edit-hero-fields textarea {
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 14px;
+    outline: none;
+    background: rgba(255, 255, 255, 0.95);
+    color: #222;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.edit-hero-fields textarea {
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.edit-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 14px 0 24px;
+    border: 1px solid #d8d8d8;
+    border-left: 5px solid #ffcc00;
+    border-radius: 14px;
+    padding: 18px;
+    font-size: 14px;
+    line-height: 1.65;
+    outline: none;
+    resize: vertical;
+}
+
+.edit-textarea.source {
+    border-left-color: #d40511;
+}
+
+.edit-textarea:focus {
+    border-color: #d40511;
+    box-shadow: 0 0 0 3px rgba(212, 5, 17, 0.1);
+}
+
+.edit-select {
+    border: 1px solid #d8d8d8;
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #222;
+    background: #ffffff;
+    min-width: 120px;
+}
+
+.meta-row.tags-meta.full-width {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.meta-row.tags-meta .tag-list {
+    margin-top: 10px;
+    width: 100%;
+}
+
+.tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.tag-chip {
+    border: 1px solid #ffcc00;
+    background: #fff4bf;
+    color: #333;
+    border-radius: 999px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: 800;
+    font-size: 12px;
+}
+
+.tag-chip.selected {
+    background: #d40511;
+    border-color: #d40511;
+    color: #ffffff;
+}
