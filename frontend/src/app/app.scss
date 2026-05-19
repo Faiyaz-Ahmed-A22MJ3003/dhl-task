@@ -1,4 +1,7 @@
 $header-height: 130px;
+$sidebar-width: 290px;
+$sidebar-collapsed-width: 30px;
+$sidebar-transition: 0.70s ease;
 
 :host {
     display: block;
@@ -6,24 +9,78 @@ $header-height: 130px;
 }
 
 .app-shell {
-    display: flex;
     min-height: 100vh;
     background: #f4f4f4;
     color: #202020;
     font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Fixed slide-out sidebar */
 .sidebar {
-    width: 290px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: $sidebar-width;
+    height: 100vh;
     background: linear-gradient(180deg, #ffcc00 0%, #f7bd00 100%);
     border-right: 7px solid #d40511;
     padding: 24px 18px;
     display: flex;
     flex-direction: column;
     gap: 28px;
-    box-shadow: 8px 0 24px rgba(0, 0, 0, 0.08);
+    z-index: 1000;
+    overflow: hidden;
+
+    transform: translateX(calc(-1 * (#{$sidebar-width} - #{$sidebar-collapsed-width})));
+    transition:
+        transform $sidebar-transition,
+        box-shadow $sidebar-transition;
 }
 
+.sidebar:hover {
+    transform: translateX(0);
+    box-shadow: 18px 0 40px rgba(0, 0, 0, 0.18);
+}
+
+/* Visible hover strip */
+.sidebar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -7px;
+    width: 7px;
+    height: 100%;
+    background: #d40511;
+}
+
+/* Main area stays fixed and does not stretch sidebar */
+.main-area {
+    min-height: 100vh;
+    margin-left: $sidebar-collapsed-width;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* Sidebar content animation */
+.brand-block,
+.nav-menu,
+.sidebar-footer {
+    opacity: 0;
+    transform: translateX(-14px);
+    transition:
+        opacity 0.22s ease,
+        transform 0.22s ease;
+}
+
+.sidebar:hover .brand-block,
+.sidebar:hover .nav-menu,
+.sidebar:hover .sidebar-footer {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Branding */
 .brand-block {
     height: 105px;
     display: flex;
@@ -34,6 +91,7 @@ $header-height: 130px;
     padding: 0 8px;
     border-bottom: 1px solid rgba(120, 80, 0, 0.25);
     text-align: center;
+    flex-shrink: 0;
 }
 
 .brand-logo {
@@ -44,11 +102,12 @@ $header-height: 130px;
     display: block;
 }
 
-
+/* Navigation */
 .nav-menu {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    flex-shrink: 0;
 }
 
 .nav-menu a {
@@ -59,6 +118,7 @@ $header-height: 130px;
     border-radius: 10px;
     transition: 0.2s ease;
     border: 1px solid transparent;
+    white-space: nowrap;
 }
 
 .nav-menu a:hover {
@@ -72,6 +132,7 @@ $header-height: 130px;
     box-shadow: 0 8px 18px rgba(212, 5, 17, 0.25);
 }
 
+/* Sidebar footer stays at bottom of viewport */
 .sidebar-footer {
     margin-top: auto;
     background: rgba(255, 255, 255, 0.4);
@@ -81,6 +142,7 @@ $header-height: 130px;
     display: flex;
     flex-direction: column;
     gap: 4px;
+    flex-shrink: 0;
 }
 
 .sidebar-footer span {
@@ -94,13 +156,7 @@ $header-height: 130px;
     font-size: 14px;
 }
 
-.main-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-}
-
+/* Topbar */
 .topbar {
     height: $header-height;
     background: #ffffff;
@@ -109,6 +165,7 @@ $header-height: 130px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-shrink: 0;
 }
 
 .topbar h2 {
@@ -122,6 +179,12 @@ $header-height: 130px;
     margin: 5px 0 0;
     color: #666;
     font-size: 14px;
+}
+
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .user-pill {
@@ -144,16 +207,6 @@ $header-height: 130px;
     border-radius: 50%;
 }
 
-.content-area {
-    padding: 28px;
-}
-
-.topbar-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
 .logout-btn {
     border: none;
     background: #d40511;
@@ -166,4 +219,49 @@ $header-height: 130px;
 
 .logout-btn:hover {
     background: #b8040f;
+}
+
+/* Page content */
+.content-area {
+    padding: 28px;
+}
+
+/* Optional: responsive behavior */
+@media (max-width: 900px) {
+    $mobile-sidebar-width: 260px;
+
+    .sidebar {
+        width: $mobile-sidebar-width;
+        transform: translateX(calc(-1 * (#{$mobile-sidebar-width} - #{$sidebar-collapsed-width})));
+    }
+
+    .sidebar:hover {
+        transform: translateX(0);
+    }
+
+    .topbar {
+        padding: 0 20px;
+    }
+
+    .topbar h2 {
+        font-size: 21px;
+    }
+
+    .topbar p {
+        font-size: 13px;
+    }
+
+    .user-pill {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .logout-btn {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .content-area {
+        padding: 22px;
+    }
 }

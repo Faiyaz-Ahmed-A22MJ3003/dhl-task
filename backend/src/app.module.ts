@@ -10,6 +10,7 @@ import { AutomationModule } from './automation/automation.module';
 import { AttachmentsModule } from './attachments/attachments.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersAdminModule } from './users-admin/users-admin.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { UsersAdminModule } from './users-admin/users-admin.module';
     AttachmentsModule,
     AuthModule,
     UsersAdminModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],
