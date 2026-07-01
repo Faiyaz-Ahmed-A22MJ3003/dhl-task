@@ -17,7 +17,7 @@ export class AiService {
     private readonly ai = new GoogleGenAI({
         apiKey: process.env.GEMINI_API_KEY,
     });
-    private readonly model = process.env.GEMINI_MODEL || 'gemini-3-flash-preview';
+    private readonly model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
     async generateFromText(sourceText: string, sourceType = 'TEXT'): Promise<GeneratedArticle> {
         this.validateSourceText(sourceText);
